@@ -1,0 +1,71 @@
+#!/bin/bash
+
+# https://www.raspberrypi.org/forums/viewtopic.php?t=192711
+#
+# FIX IPv6 as noted above
+#
+
+# No ARM toolchain...
+#
+# https://docs.espressif.com/projects/esp-idf/en/latest/get-started/linux-setup-scratch.html
+
+sudo apt-get update
+sudo apt-get install -y --fix-missing \
+     automake \
+     bison \
+     flex \
+     gawk \
+     gettext \
+     git \
+     gperf \
+     grep \
+     help2man \
+     libncurses-dev \
+     libtool \
+     libtool-bin \
+     make \
+     python \
+     python-dev \
+     python-pip \
+     python-pyparsing \
+     python-serial \
+     python-setuptools \
+     texinfo \
+     wget
+
+/bin/rm -rf crosstool-NG
+git clone https://github.com/espressif/crosstool-NG
+cd crosstool-NG
+./bootstrap && ./configure --enable-local && make install
+./ct-ng xtensa-esp32-elf
+./ct-ng build
+chmod -R u+w builds/xtensa-esp32-elf
+
+# Toolchain will be built in ~/esp/crosstool-NG/builds/xtensa-esp32-elf. Follow instructions for standard setup to add the toolchain to your PATH.
+
+
+
+sudo apt-get install -y build-essential git libncurses5-dev flex bison gperf
+git clone https://github.com/espressif/crosstool-NG
+setup-arduino-ci() {
+if ! id -nG "$USER" | grep -qw "$GROUP"
+then
+    sudo -a -G dialout $USER
+fi
+
+au cache_arduino
+cd "$(au sketchbook)"
+mkdir -p hardware/expressif
+cd hardware/expressif
+if [ ! -d esp32/.git ]
+then
+  /bin/rm -rf esp32
+  git clone --recursive https://github.com/espressif/arduino-esp32.git esp32
+else
+  git -C esp32 pull --recursive
+fi
+
+cd esp32/tools
+python get.py
+
+}
